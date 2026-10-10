@@ -74,6 +74,14 @@ Mở repo bằng Claude Code (`claude` trong thư mục repo).
 
 Đối chiếu báo cáo với danh sách 11 lỗi ở đầu file. Lỗi nào skill bỏ sót thì bổ sung check vào `SKILL.md` rồi chạy lại.
 
+Vì AI đọc được danh sách lỗi ở đầu file, kết quả này dễ đẹp hơn thực tế. Để đo thật, mở **phiên Claude Code mới** và review bản mù:
+
+```
+/ai-test-review examples/blind-seeded-bugs.spec.ts theo test case TC-1024 ghi ở đầu file. Không mở file nào khác trong examples/.
+```
+
+Sau đó chấm điểm bằng `examples/blind-seeded-bugs.key.md`: số lỗi tìm đúng trên 11, số lỗi thêm, và số finding sai. AI vẫn có thể tự tìm thấy `seeded-bugs.spec.ts` trong repo, nên hãy xem lại các file nó đã mở trước khi tin con số.
+
 **2. Cho AI viết test mới rồi review.** Ví dụ:
 
 ```
