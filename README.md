@@ -18,8 +18,12 @@ Repo chạy độc lập. Khi có framework thật, chỉ cần mang phần cấ
 ├── pages/checkout.page.ts                 # page object
 ├── fixtures/index.ts                      # fixture checkoutPage
 ├── data/test-data.ts                      # hằng số nghiệp vụ, message, format VND
-├── tests/payment/wallet-payment.spec.ts   # 7 test mẫu viết theo rule
-└── examples/seeded-bugs.spec.ts           # test cài sẵn 11 lỗi để thử skill
+├── test-cases/payment/TC-1031.md          # test case nguồn, dùng để đối chiếu khi review
+├── tests/payment/wallet-payment.spec.ts   # test mẫu viết theo rule
+└── examples/
+    ├── seeded-bugs.spec.ts                # test cài sẵn 11 lỗi, có ghi đáp án ở đầu file
+    ├── blind-seeded-bugs.spec.ts          # cùng code nhưng không có đáp án, để đo skill thật
+    └── blind-seeded-bugs.key.md           # đáp án cho bản mù
 ```
 
 ## Ứng dụng demo
@@ -69,6 +73,14 @@ Mở repo bằng Claude Code (`claude` trong thư mục repo).
 ```
 
 Đối chiếu báo cáo với danh sách 11 lỗi ở đầu file. Lỗi nào skill bỏ sót thì bổ sung check vào `SKILL.md` rồi chạy lại.
+
+Vì AI đọc được danh sách lỗi ở đầu file, kết quả này dễ đẹp hơn thực tế. Để đo thật, mở **phiên Claude Code mới** và review bản mù:
+
+```
+/ai-test-review examples/blind-seeded-bugs.spec.ts theo test case TC-1024 ghi ở đầu file. Không mở file nào khác trong examples/.
+```
+
+Sau đó chấm điểm bằng `examples/blind-seeded-bugs.key.md`: số lỗi tìm đúng trên 11, số lỗi thêm, và số finding sai. AI vẫn có thể tự tìm thấy `seeded-bugs.spec.ts` trong repo, nên hãy xem lại các file nó đã mở trước khi tin con số.
 
 **2. Cho AI viết test mới rồi review.** Ví dụ:
 

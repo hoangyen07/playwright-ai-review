@@ -15,6 +15,7 @@ The central question is not "does the test run" but "**would this test fail if t
 
 - **Missed step**: go through the test case step by step and mark each step and each expected result done, partial or missing.
 - **Unrequested scope**: steps, assertions or data not in the test case, including extra navigation, extra API calls, or config changes.
+- **Wrong precondition / test data**: setup that differs from the test case's preconditions (balance, amount, account state, spent-today, order id), so the test exercises a different path than the one specified.
 - **Wrong expected result**: an assertion whose value differs from the test case (amount, status text, error message, currency format).
 - **Incorrect assumption**: decisions made about things the test case left open, such as account type, initial balance, environment, language, or which error appears first.
 - **Happy path only**: for payment flows, check whether negative cases exist: insufficient balance, limit exceeded, timeout, duplicate submit, cancelled transaction.
@@ -27,10 +28,16 @@ The central question is not "does the test run" but "**would this test fail if t
 - **No assertion**: a test, or a step with an expected result, that ends without any `expect`.
 - **Swallowed failure**: try/catch, `.catch(() => {})`, or conditional logic that lets a failing check pass.
 - **Mutation check**: for each key assertion, name one realistic product bug (wrong amount, wrong status, missing error) and say whether the test would fail. If it would still pass, report it.
+  - Judge the code as it stands in this review. Never reuse a result from an earlier review or an earlier version of the test.
+  - Where the app source is in the repo, confirm at least one key mutation by running it: introduce the bug in the app, run the affected test, record the output, then revert with `git checkout -- <file>` and confirm `git status` shows no leftover change. Do not mutate the tests under review.
+  - Mark each mutation as **run** (with the actual result) or **reasoned** (from reading the code). If the test fails before reaching the logic under test, or nothing could be run or reasoned, mark the check `—` and say why.
 
 **Hallucinated or wrong API**
 
-- **Non-existent Playwright API**: list every Playwright method, option and assertion used; mark each verified or not against the installed `@playwright/test` version.
+- **Non-existent Playwright API**: list every Playwright method, option and assertion used; mark each verified or not against the installed `@playwright/test` version. Verify with tools, not memory:
+  - Search the installed type definitions (`node_modules/playwright/types/test.d.ts` for `test`/`expect`, `node_modules/playwright-core/types/types.d.ts` for page/locator methods) for each name, e.g. `grep -n "toHaveText(" node_modules/playwright/types/test.d.ts`.
+  - Run the type checker on the file. If the file is excluded from `tsconfig.json` (as `examples/` is), check it directly: `npx tsc --noEmit --strict --skipLibCheck --module esnext --moduleResolution bundler --target es2022 <file>`.
+  - Anything not confirmed by one of these is marked **unverified**, not verified.
 - **Invented locators**: selectors, test ids, labels or button names not confirmed to exist in the app (DOM, page object, or design). Mark each verified or not.
 - **Invented fixtures/helpers**: imports of page objects, fixtures or utilities that don't exist in the repo, or called with the wrong signature.
 
@@ -69,6 +76,8 @@ Report findings ranked by severity: **tests that pass while the feature is broke
   Fix: also assert the amount on the receipt and the remaining balance
 ```
 
+One block per root cause. When one defect causes several symptoms (a wrong precondition that also breaks a derived expected value), report it once, list the affected lines in that block, and do not count the symptoms as separate findings.
+
 Do not rewrite the tests under review. Missing tests are the exception: if the coverage checks found missing steps or negative cases, write those tests in full, following `.claude/rules/playwright.md`.
 
 Do not invent issues. A check with nothing to report is a valid result.
@@ -79,6 +88,7 @@ End with this checklist, marking each check found, clean, or not applicable:
 Coverage of the source test case
   ✗ Missed step
   ✓ Unrequested scope
+  ✓ Wrong precondition / test data
   ✗ Wrong expected result
   ✓ Incorrect assumption
   ✗ Happy path only
