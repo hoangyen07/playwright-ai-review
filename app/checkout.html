@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Demo Checkout</title>
+  <style>
+    :root { --ink: #1b2430; --muted: #5b6675; --line: #dfe3e8; --ok: #0a7d4f; --err: #b3261e; --brand: #0b5cff; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: #f4f6f8; }
+    main { max-width: 420px; margin: 40px auto; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 24px; }
+    h1 { font-size: 20px; margin: 0 0 16px; }
+    .row { display: flex; justify-content: space-between; padding: 6px 0; }
+    .row span:first-child { color: var(--muted); }
+    fieldset { border: 1px solid var(--line); border-radius: 8px; margin: 16px 0; padding: 12px; }
+    label { display: block; padding: 4px 0; cursor: pointer; }
+    button { width: 100%; padding: 12px; font-size: 16px; border: 0; border-radius: 8px; background: var(--brand); color: #fff; cursor: pointer; }
+    button:disabled { opacity: .5; cursor: progress; }
+    #result { margin-top: 16px; padding: 12px; border-radius: 8px; display: none; }
+    #result.ok { display: block; background: #e7f6ee; color: var(--ok); }
+    #result.err { display: block; background: #fdecea; color: var(--err); }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Thanh toán đơn hàng</h1>
+  <div class="row"><span>Mã đơn</span><span data-testid="order-id"></span></div>
+  <div class="row"><span>Số tiền</span><span data-testid="amount"></span></div>
+  <div class="row"><span>Số dư ví</span><span data-testid="balance"></span></div>
+
+  <fieldset>
+    <legend>Phương thức thanh toán</legend>
+    <label><input type="radio" name="method" value="wallet" checked> Ví</label>
+    <label><input type="radio" name="method" value="bank"> Ngân hàng liên kết</label>
+  </fieldset>
+
+  <button type="button" id="pay">Thanh toán</button>
+
+  <div id="result" role="status" aria-live="polite">
+    <div data-testid="txn-status"></div>
+    <div data-testid="txn-message"></div>
+    <div data-testid="txn-id"></div>
+  </div>
+</main>
+
+<script>
+  // State comes from the query string so tests can set it up without UI steps:
+  // ?orderId=ORD-1&amount=50000&balance=100000&spentToday=0
+  const DAILY_LIMIT_VND = 20000000;
+  const PROCESSING_MS = 600;
+
+  const q = new URLSearchParams(location.search);
+  const state = {
+    orderId: q.get('orderId') || 'ORD-0001',
+    amount: Number(q.get('amount') || 50000),
+    balance: Number(q.get('balance') || 100000),
+    spentToday: Number(q.get('spentToday') || 0),
+    paid: false,
+  };
+
+  const vnd = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' đ';
+  const $ = (id) => document.querySelector(`[data-testid="${id}"]`);
+  const render = () => {
+    $('order-id').textContent = state.orderId;
+    $('amount').textContent = vnd(state.amount);
+    $('balance').textContent = vnd(state.balance);
+  };
+  const show = (ok, status, message, txnId = '') => {
+    const box = document.getElementById('result');
+    box.className = ok ? 'ok' : 'err';
+    $('txn-status').textContent = status;
+    $('txn-message').textContent = message;
+    $('txn-id').textContent = txnId ? 'Mã giao dịch: ' + txnId : '';
+  };
+
+  document.getElementById('pay').addEventListener('click', () => {
+    const btn = document.getElementById('pay');
+    if (btn.disabled || state.paid) return;
+    btn.disabled = true;
+    btn.textContent = 'Đang xử lý...';
+
+    setTimeout(() => {
+      const method = document.querySelector('input[name="method"]:checked').value;
+      btn.textContent = 'Thanh toán';
+
+      if (state.spentToday + state.amount > DAILY_LIMIT_VND) {
+        btn.disabled = false;
+        return show(false, 'Thất bại', 'Vượt hạn mức giao dịch trong ngày ' + vnd(DAILY_LIMIT_VND));
+      }
+      if (method === 'wallet' && state.balance < state.amount) {
+        btn.disabled = false;
+        return show(false, 'Thất bại', 'Số dư ví không đủ');
+      }
+      if (method === 'wallet') state.balance -= state.amount;
+      state.spentToday += state.amount;
+      state.paid = true;
+      render();
+      show(true, 'Thành công', 'Đã thanh toán ' + vnd(state.amount), 'TXN-' + Date.now());
+    }, PROCESSING_MS);
+  });
+
+  render();
+</script>
+</body>
+</html>
