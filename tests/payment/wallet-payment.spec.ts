@@ -71,6 +71,20 @@ test.describe('Wallet payment', () => {
     await expect(checkoutPage.txnStatus).toHaveText(MESSAGES.success);
     await expect(checkoutPage.balance).toHaveText(vnd(balance - amount));
   });
+
+  test('TC-1031: single payment equal to the daily limit is allowed', async ({ checkoutPage }) => {
+    const amount = DAILY_LIMIT_VND;
+    const balance = 25_000_000;
+    await checkoutPage.open({ amount, balance, spentToday: 0 });
+
+    await checkoutPage.chooseMethod('Ví');
+    await checkoutPage.pay();
+
+    await expect(checkoutPage.txnStatus).toHaveText(MESSAGES.success);
+    await expect(checkoutPage.txnMessage).toHaveText(`Đã thanh toán ${vnd(amount)}`);
+    await expect(checkoutPage.txnId).toHaveText(/^Mã giao dịch: TXN-\d+$/);
+    await expect(checkoutPage.balance).toHaveText(vnd(balance - amount));
+  });
 });
 
 test.describe('Linked bank payment', () => {

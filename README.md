@@ -18,8 +18,12 @@ Repo chạy độc lập. Khi có framework thật, chỉ cần mang phần cấ
 ├── pages/checkout.page.ts                 # page object
 ├── fixtures/index.ts                      # fixture checkoutPage
 ├── data/test-data.ts                      # hằng số nghiệp vụ, message, format VND
-├── tests/payment/wallet-payment.spec.ts   # 7 test mẫu viết theo rule
-└── examples/seeded-bugs.spec.ts           # test cài sẵn 11 lỗi để thử skill
+├── test-cases/payment/TC-1031.md          # test case nguồn, dùng để đối chiếu khi review
+├── tests/payment/wallet-payment.spec.ts   # test mẫu viết theo rule
+└── examples/
+    ├── seeded-bugs.spec.ts                # test cài sẵn 11 lỗi, có ghi đáp án ở đầu file
+    ├── blind-seeded-bugs.spec.ts          # cùng code nhưng không có đáp án, để đo skill thật
+    └── blind-seeded-bugs.key.md           # đáp án cho bản mù
 ```
 
 ## Ứng dụng demo

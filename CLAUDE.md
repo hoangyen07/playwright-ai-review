@@ -14,6 +14,7 @@ Adapted from https://github.com/dvasyliev/evaluating-ai-code.
   - `pages/` — page objects (locators + UI actions, no assertions)
   - `fixtures/` — custom fixtures; tests import `test` and `expect` from here
   - `data/` — business constants, expected messages and the `vnd()` formatter
+  - `test-cases/` — source test cases (`TC-xxxx.md`, same folder layout as `tests/`); the reference for coverage checks
   - `examples/` — deliberately broken tests for checking the review skill; never fix them, never run them in CI
 - Commands:
   - All tests: `npm test`
